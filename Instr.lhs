@@ -36,15 +36,27 @@ Instruction layouts:
 <	+------------+------------+--------------------+--------------------+
 
 
+	C-type instructions. These are used to modify the state of the `crb` in
+	order to be able to more easily execute loops and function calls.  `arg 1`
+	may be a `CVal`.
+
+<	0                         6                   11                   16
+<	+-------------------------+--------------------+--------------------+
+<	|          001000         |        c-op        |        arg 1       |
+<	+-------------------------+--------------------+--------------------+
+
+
 > data Instr
 > 	= M MemOp CPtr CPtr
 > 	| D Opcode CPtr CPtr
+> 	| C COp CPtr
 > 	deriving (Eq, Show)
 >
 > decode :: BitVector 16 -> Instr
 > decode input
-> 	| input .&. 0xE000 == 0 = M memop arg1 arg2
-> 	| input .&. 0x8000 /= 0 = D opcode arg1 arg2
+> 	| input .&. 0xe000 == 0x0000 = M memop arg1 arg2
+> 	| input .&. 0x8000 == 0x8000 = D opcode arg1 arg2
+> 	| input .&. 0xff00 == 0x2000 = C arg1 arg2
 > 	where
 > 		memop  = unpack $ bitSlice d3  d3 input
 > 		opcode = unpack $ bitSlice d1  d5 input
@@ -92,7 +104,7 @@ identity function.
 > 	| Stmem
 > 	deriving (Eq, Show, Read)
 
-	Encodings fore memory/registers access instructions:
+	Encodings for memory/registers access instructions:
 
 > instance BitPack MemOp where
 > 	type BitSize MemOp = 3
@@ -106,3 +118,27 @@ identity function.
 > 	unpack 0x01 = Ldmem
 > 	unpack 0x02 = Streg
 > 	unpack 0x03 = Stmem
+
+	`crb` modification instructions (C-type):
+
+> data COp
+> 	= Cnop
+> 	| Cinc
+> 	| Cadd
+> 	| Cjmp
+> 	deriving (Eq, Show, Read)
+
+	Encodings for `crb` modification instructions:
+
+> instance BitPack COp where
+> 	type BitSize COp = 5
+>
+> 	pack Cnop  = 0x00
+> 	pack Cinc  = 0x01
+> 	pack Cadd  = 0x02
+> 	pack Cjmp  = 0x03
+>
+> 	unpack 0x00 = Cnop
+> 	unpack 0x01 = Cinc
+> 	unpack 0x02 = Cadd
+> 	unpack 0x03 = Cjmp
