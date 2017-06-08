@@ -19,10 +19,10 @@ Instruction layouts:
 	`arg 1` and `arg 2` are the operands to the operation if it is a binary
 	operation. Only `arg 1` is used otherwise.
 
-<	0    1                    6                   11                   16
-<	+----+--------------------+--------------------+--------------------+
-<	| 1  |       opcode       |        arg 1       |        arg 2       |
-<	+----+--------------------+--------------------+--------------------+
+<	0   1                   6                  11                  16
+<	+---+-------------------+-------------------+-------------------+
+<	| 1 |       opcode      |        arg 1      |        arg 2      |
+<	+---+-------------------+-------------------+-------------------+
 
 
 	M-type instructions. These load `CVal`s between the `crb` and registers and
@@ -30,35 +30,35 @@ Instruction layouts:
 	the register, depending on where it is loaded/stored from. `arg 2` is the
 	`CVal` to be stored, if the instruction is a store instruction.
 
-<	0            3            6                   11                   16
-<	+------------+------------+--------------------+--------------------+
-<	|    000     |   mem-op   |        arg 1       |        arg 2       |
-<	+------------+------------+--------------------+--------------------+
+<	0           3           6                  11                  16
+<	+-----------+-----------+-------------------+-------------------+
+<	|    000    |   mem-op  |        arg 1      |        arg 2      |
+<	+-----------+-----------+-------------------+-------------------+
 
 
 	C-type instructions. These are used to modify the state of the `crb` in
 	order to be able to more easily execute loops and function calls.  `arg 1`
 	may be a `CVal`.
 
-<	0                         6                   11                   16
-<	+-------------------------+--------------------+--------------------+
-<	|          001000         |        c-op        |        arg 1       |
-<	+-------------------------+--------------------+--------------------+
+<	0           3           6                  11                  16
+<	+-----------+-----------+-------------------+-------------------+
+<	|    001    |   c-op    |        arg 1      |        arg 2      |
+<	+-----------+-----------+-------------------+-------------------+
 
 
 > data Instr
-> 	= M MemOp CPtr CPtr
+> 	= M MemOp  CPtr CPtr
 > 	| D Opcode CPtr CPtr
-> 	| C COp CPtr
+> 	| C COp    CPtr CPtr
 > 	deriving (Eq, Show)
 >
 > decode :: BitVector 16 -> Instr
 > decode input
-> 	| input .&. 0xe000 == 0x0000 = M memop arg1 arg2
+> 	| input .&. 0xe000 == 0x0000 = M miniop arg1 arg2
 > 	| input .&. 0x8000 == 0x8000 = D opcode arg1 arg2
-> 	| input .&. 0xff00 == 0x2000 = C arg1 arg2
+> 	| input .&. 0xe000 == 0x2000 = C miniop arg1 arg2
 > 	where
-> 		memop  = unpack $ bitSlice d3  d3 input
+> 		miniop = unpack $ bitSlice d3  d3 input
 > 		opcode = unpack $ bitSlice d1  d5 input
 > 		arg1   = unpack $ bitSlice d6  d5 input
 > 		arg2   = unpack $ bitSlice d11 d5 input
@@ -131,7 +131,7 @@ identity function.
 	Encodings for `crb` modification instructions:
 
 > instance BitPack COp where
-> 	type BitSize COp = 5
+> 	type BitSize COp = 3
 >
 > 	pack Cnop  = 0x00
 > 	pack Cinc  = 0x01
