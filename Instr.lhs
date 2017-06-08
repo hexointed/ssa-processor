@@ -3,14 +3,7 @@ Instruction set definitions
 > module Instr where
 > import CLaSH.Prelude
 > import Bitmanip
-
-All arithmetic Instructions source their operands from the `cyclic register 
-buffer`. Each element on the `crb` is called a `CVal`, and a reference to a 
-`CVal` is called a `CPtr`. Currently, the `crb` contains 32 values, and each
-`CVal` is 32 bits wide.
-
-> type CVal = BitVector 32
-> type CPtr = BitVector 5
+> import CVal
 
 
 Instruction layouts:

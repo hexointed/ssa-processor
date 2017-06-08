@@ -3,6 +3,7 @@ The `cyclic register buffer`
 > module RegisterBuffer where
 > import CLaSH.Prelude
 > import Instr
+> import CVal
 
 
 This is the first and most important set of registers for the SSA processor. 
