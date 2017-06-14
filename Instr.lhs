@@ -10,51 +10,57 @@ Instruction layouts:
 
 	D-type instructions. These are pure operations on data on the `crb`. Both
 	`arg 1` and `arg 2` are the operands to the operation if it is a binary
-	operation. Only `arg 1` is used otherwise.
+	operation. Only `arg 1` is used otherwise. `size` determines the bit-width
+	of the arguments: a `size` of 0 means 8-bit wide arguments, 1 corresponds
+	to 16-bit wide arguments and so on.
 
-<	0   1                   6                  11                  16
-<	+---+-------------------+-------------------+-------------------+
-<	| 1 |       opcode      |        arg 1      |        arg 2      |
-<	+---+-------------------+-------------------+-------------------+
+<	0   1                   6              10              14      16
+<	+---+-------------------+---------------+---------------+-------+
+<	| 1 |       opcode      |     arg 1     |     arg 2     |  size |
+<	+---+-------------------+---------------+---------------+-------+
 
 
 	M-type instructions. These load `CVal`s between the `crb` and registers and
 	memory. `arg 1` is either the `CVal` that contains the memory address, or
 	the register, depending on where it is loaded/stored from. `arg 2` is the
-	`CVal` to be stored, if the instruction is a store instruction.
+	`CVal` to be stored, if the instruction is a store instruction. `size` 
+	determines how many bits are loaded or stored.
 
-<	0           3           6                  11                  16
-<	+-----------+-----------+-------------------+-------------------+
-<	|    000    |   mem-op  |        arg 1      |        arg 2      |
-<	+-----------+-----------+-------------------+-------------------+
+<	0           3           6              10              14      16
+<	+-----------+-----------+---------------+---------------+-------+
+<	|    000    |   mem-op  |     arg 1     |     arg 2     |  size |
+<	+-----------+-----------+---------------+---------------+-------+
 
 
 	C-type instructions. These are used to modify the state of the `crb` in
 	order to be able to more easily execute loops and function calls.  `arg 1`
 	may be a `CVal`.
 
-<	0           3           6                  11                  16
-<	+-----------+-----------+-------------------+-------------------+
-<	|    001    |   c-op    |        arg 1      |        arg 2      |
-<	+-----------+-----------+-------------------+-------------------+
+<	0           3           6              10              14      16
+<	+-----------+-----------+---------------+---------------+-------+
+<	|    001    |    c-op   |     arg 1     |     arg 2     |  size |
+<	+-----------+-----------+---------------+---------------+-------+
 
 
+> type Size = BitVector 2
+>
 > data Instr
-> 	= M MemOp  CPtr CPtr
-> 	| D Opcode CPtr CPtr
-> 	| C COp    CPtr CPtr
+> 	= M MemOp  CPtr CPtr Size
+> 	| D Opcode CPtr CPtr Size
+> 	| C COp    CPtr CPtr Size
 > 	deriving (Eq, Show)
 >
 > decode :: BitVector 16 -> Instr
 > decode input
-> 	| input .&. 0xe000 == 0x0000 = M miniop arg1 arg2
-> 	| input .&. 0x8000 == 0x8000 = D opcode arg1 arg2
-> 	| input .&. 0xe000 == 0x2000 = C miniop arg1 arg2
+> 	| input .&. 0xe000 == 0x0000 = M miniop arg1 arg2 size
+> 	| input .&. 0x8000 == 0x8000 = D opcode arg1 arg2 size
+> 	| input .&. 0xe000 == 0x2000 = C miniop arg1 arg2 size
 > 	where
 > 		miniop = unpack $ bitSlice d3  d3 input
 > 		opcode = unpack $ bitSlice d1  d5 input
-> 		arg1   = unpack $ bitSlice d6  d5 input
-> 		arg2   = unpack $ bitSlice d11 d5 input
+> 		arg1   = unpack $ bitSlice d6  d4 input
+> 		arg2   = unpack $ bitSlice d10 d4 input
+> 		size   = unpack $ bitSlice d14 d2 input
 
 
 All operations together with their opcodes are listed below. There are two
