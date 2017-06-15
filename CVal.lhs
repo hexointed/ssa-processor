@@ -7,10 +7,10 @@ Definitions for `CVal`, the elemens on the `cyclic register buffer`
 
 All arithmetic Instructions source their operands from the `cyclic register 
 buffer`. Each element on the `crb` is called a `CVal`, and a reference to a 
-`CVal` is called a `CPtr`. Currently, the `crb` contains 32 values, and each
+`CVal` is called a `CPtr`. Currently, the `crb` contains 16 values, and each
 `CVal` is 32 bits wide.
 
-> type CRBSize = 32
+> type CRBSize = 16
 > type CValSize = 32
 > 
 > type CPtr = BitVector (Log 2 CRBSize)
@@ -53,3 +53,8 @@ arguments whose `R` flags are zero must stall until they are one.
 >
 > invalidate :: CVal -> CVal
 > invalidate c = c { flags = flags c .&. 0xe }
+>
+> fromValue :: BitVector CValSize -> CVal
+> fromValue v = CVal v 0x1
+>
+> defaultFlags = low ++# low ++# low ++# high
