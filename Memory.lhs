@@ -8,9 +8,10 @@ Per-core memory management.
 
 Instruction memory. Non-mutable.
 
-> instrMem :: Signal (BitVector 16) -> Signal Instr
+> type IPtr = BitVector 8
+>
+> instrMem :: Signal IPtr -> Signal (BitVector 16)
 > instrMem addr = 
-> 	pure decode <*> 
 > 	romFile (SNat :: SNat 8) "instructions.dat" 
 > 	(fmap (unpack . resize) addr)
 
