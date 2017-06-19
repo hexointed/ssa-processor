@@ -1,4 +1,4 @@
-The `cyclic register buffer`  
+The `cyclic register buffer`
 
 > module RegisterBuffer where
 > import CLaSH.Prelude
@@ -6,12 +6,12 @@ The `cyclic register buffer`
 > import CVal
 
 
-This is the first and most important set of registers for the SSA processor. 
-Most instructions source at least one of their operands from the `crb`, and 
+This is the first and most important set of registers for the SSA processor.
+Most instructions source at least one of their operands from the `crb`, and
 D-type instructions (those that do actual calculations) always source both of
 their arguments from the `crb`.
 
-The argument registers on the `crb` are adressed by the operations that use 
+The argument registers on the `crb` are adressed by the operations that use
 them, but the destination register is determined by the `register counter`. The
 `register counter` normally increases every clock cycle, but can be altered by
 several different instructions (C-type).
@@ -32,13 +32,17 @@ result of the task before that, etc. `nextWriteA` is an absolute address, and
 should be used for the next task's `writeA` (which is also treated as an
 absolute address).
 
-> data CInput = CInput
+> data CRead = CRead
 > 	{ op :: COp
-> 	, readA :: CPtr
-> 	, readB :: CPtr
-> 	, readC :: CPtr
-> 	, writeA :: CPtr
-> 	, writeV :: CVal
+> 	, cReadA :: CPtr
+> 	, cReadB :: CPtr
+> 	, cReadC :: CPtr
+> 	}
+> 	deriving Show
+> 	
+> data CWrite = CWrite
+> 	{ cWriteA :: CPtr
+> 	, cWriteV :: CVal
 > 	}
 > 	deriving Show
 >
@@ -50,46 +54,45 @@ absolute address).
 > 	}
 > 	deriving Show
 
-> crb :: Signal CInput -> Signal COutput
-> crb = mealy crb' (Crb 0x0 (repeat $ CVal undefined undefined))
 
 Because of the lack of good blockRam primitives in CLaSH, the `crb` is
 currently implemented as logic. Its type has been abstracted to be able to
 support a later rewrite using proper blockRams.
 
-> crb' :: Crb -> CInput -> (Crb, COutput)
-> crb' c i = (c' , COutput resA resB resC (regCounter c'))
+> crb :: Signal CRead -> Signal CWrite -> Signal COutput
+> crb = curry (mealy crb' startState . bundle)
 > 	where
-> 		c' = invalidateBuf i $ writeBuf i $ nextRC i c
-> 		resA = buf c !! (regCounter c - readA i - 1)
-> 		resB = buf c !! (regCounter c - readB i - 1)
-> 		resC = buf c !! (regCounter c - readC i - 1)
+> 		startState = Crb 0x0 $ repeat $ CVal undefined undefined
 >
-> writeBuf :: CInput -> Crb -> Crb
-> writeBuf i c = c { buf = replace (writeA i) wrt (buf c) }
+> crb' :: Crb -> (CRead, CWrite) -> (Crb, COutput)
+> crb' c (r, w) = (c' , COutput resA resB resC (regCounter c'))
 > 	where
-> 		wrt = case op i of
-> 			Cinc -> writeV i
-> 			_    -> buf c !! writeA i
+> 		c' = invalidateBuf r $ writeBuf w $ nextRC r c
+> 		resA = buf c !! (regCounter c - cReadA r - 1)
+> 		resB = buf c !! (regCounter c - cReadB r - 1)
+> 		resC = buf c !! (regCounter c - cReadC r - 1)
+>
+> writeBuf :: CWrite -> Crb -> Crb
+> writeBuf i c = c { buf = replace (cWriteA i) (cWriteV i) (buf c) }
 
 The `register counter` automatically increases every time a task is dispatched,
 in order to allocate space for that task's result. This means an implicit `Cinc`
 instruction is executed during these tasks. If a different C-type instruction
 is executed, the `register counter` may change differently.
 
-> nextRC :: CInput -> Crb -> Crb
+> nextRC :: CRead -> Crb -> Crb
 > nextRC i c = c { regCounter = case op i of
 > 		Cnop -> regCounter c
 > 		Cinc -> regCounter c + 1
-> 		Cadd -> regCounter c + readA i
-> 		Cjmp -> readA i
+> 		Cadd -> regCounter c + cReadA i
+> 		Cjmp -> cReadA i
 > 	}
 
 Every time a new task is dispatched, the contents of destination register for
 that task have to be invalidated in order to prevent subsequent tasks from
 reading the previously stored value instead of the one from the new task.
 
-> invalidateBuf :: CInput -> Crb -> Crb
+> invalidateBuf :: CRead -> Crb -> Crb
 > invalidateBuf i c = c { buf = replace (regCounter c) wrt (buf c) }
 > 	where
 > 		wrt = flip ($) (buf c !! regCounter c) $ case op i of
