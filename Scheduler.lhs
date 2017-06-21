@@ -9,7 +9,10 @@ Instruction Scheduler
 currently only the instruction pointer. It is not visible to external
 components.
 
-> data SState = SState { instPtr :: BitVector 8 } deriving (Eq, Show)
+> data SState = SState
+> 	{ instPtr :: BitVector 8
+> 	}
+> 	deriving Show
 
 
 The Instruction Scheduler decodes and keeps track of which instructions should
