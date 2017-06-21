@@ -1,9 +1,13 @@
 A single processor core
 
 > module Core where
+> import CLaSH.Prelude
 > import Instr
-> import RegisterBuffer
 > import Memory
+> import RegisterBuffer
+> import Scheduler
+> import Alu
+> import Dispatcher
 
 
 < +-------------------------------------------------------------+ 
@@ -35,3 +39,12 @@ A single processor core
 < | |  +-----+        +-----+                                |  |
 < | '--------------------------------------------------------'  |
 < +-------------------------------------------------------------+
+
+> core = undefined
+> 	where
+> 		iMemOut       = instrMem iPtr
+> 		(instr, iPtr) = scheduler iMemOut
+> 		cRead         = fetchArgs instr
+> 		cOutput       = crb cRead cWrite
+> 		aTask         = dispatch instr cOutput
+> 		cWrite        = alu aTask
