@@ -7,14 +7,14 @@ Task Dispatcher
 > import CVal
 > import Alu
 
-`gather` is the first step of the `Dispatcher`. Here, the instruction is
+`fetchArgs` is the first step of the `Dispatcher`. Here, the instruction is
 repackaged and sent to the `crb` in order to retreive the arguments for the
 computation.
 
-> fetchA = liftA fetchA'
+> fetchArgs = liftA fetchArgs'
 >
-> fetchA' :: Instr -> CRead
-> fetchA' (M memop arg1 arg2 size) = CRead
+> fetchArgs' :: Instr -> CRead
+> fetchArgs' (M memop arg1 arg2 size) = CRead
 > 	{ op = Cinc
 > 	, cReadA = arg1
 > 	, cReadB = arg2
