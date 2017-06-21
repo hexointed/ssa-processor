@@ -33,4 +33,4 @@ instructions.
 > 			Sub  -> CVal (a' - b') defaultFlags
 > 			Muli -> CVal (a' * b') defaultFlags
 > 			Mulf -> undefined
-> 		D op arg1 arg2 size = instr task
+> 		Instr (D op) arg1 arg2 size = instr task

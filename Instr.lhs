@@ -44,23 +44,27 @@ Instruction layouts:
 
 > type Size = BitVector 2
 >
-> data Instr
-> 	= M MemOp  CPtr CPtr Size
-> 	| D Opcode CPtr CPtr Size
-> 	| C COp    CPtr CPtr Size
+> data InstrType
+> 	= D Opcode
+> 	| M MemOp
+> 	| C COp
+> 	deriving (Eq, Show)
+>
+> data Instr = Instr InstrType CPtr CPtr Size
 > 	deriving (Eq, Show)
 >
 > decode :: BitVector 16 -> Instr
-> decode input
-> 	| input .&. 0xe000 == 0x0000 = M miniop arg1 arg2 size
-> 	| input .&. 0x8000 == 0x8000 = D opcode arg1 arg2 size
-> 	| input .&. 0xe000 == 0x2000 = C miniop arg1 arg2 size
+> decode input = Instr optype arg1 arg2 size
 > 	where
 > 		miniop = unpack $ bitSlice d3  d3 input
 > 		opcode = unpack $ bitSlice d1  d5 input
 > 		arg1   = unpack $ bitSlice d6  d4 input
 > 		arg2   = unpack $ bitSlice d10 d4 input
 > 		size   = unpack $ bitSlice d14 d2 input
+> 		optype
+> 			| input .&. 0x8000 == 0x8000 = D opcode
+> 			| input .&. 0xe000 == 0x0000 = M miniop
+> 			| input .&. 0xe000 == 0x2000 = C miniop
 
 
 All operations together with their opcodes are listed below. There are two

@@ -14,12 +14,12 @@ computation.
 > fetchArgs = liftA fetchArgs'
 >
 > fetchArgs' :: Instr -> CRead
-> fetchArgs' (M memop arg1 arg2 size) = CRead
-> 	{ op = Cinc
-> 	, cReadA = arg1
-> 	, cReadB = arg2
-> 	, cReadC = arg2
-> 	}
+> fetchArgs' (Instr op arg1 arg2 size) = CRead cop arg1 arg2 arg2
+> 	where
+> 		cop = case op of
+> 			D opcode -> Cinc
+> 			M miniop -> Cinc
+> 			C miniop -> miniop
 
 `dispatch` is the second and final step of the `Dispatcher`. `dispatch` packs
 the instruction together with the arguments from the `crb` and sends it to the
