@@ -19,7 +19,7 @@ The Instruction Scheduler decodes and keeps track of which instructions should
 be executed, loads them from instruction memory, and decodes them.
 
 > scheduler :: Signal (BitVector 16) -> (Signal Instr, Signal IPtr)
-> scheduler = unbundle . mealy scheduler' (SState 0)
+> scheduler = unbundle . mealy scheduler' (SState (-1))
 >
 > scheduler' :: SState -> BitVector 16 -> (SState, (Instr, IPtr))
 > scheduler' state input = (state', (instr, instPtr state'))

@@ -12,6 +12,7 @@ Instruction memory. Non-mutable.
 >
 > instrMem :: Signal IPtr -> Signal (BitVector 16)
 > instrMem addr = 
+> 	mux (register True (pure False)) 0x8000 $
 > 	romFile (SNat :: SNat 8) "instructions.dat" 
 > 	(fmap (unpack . resize) addr)
 
