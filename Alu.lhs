@@ -16,6 +16,7 @@ well as a pointer to the destination register for the result.
 > 	, aArgC :: CVal
 > 	, resPtr :: CPtr
 > 	}
+> 	deriving Show
 
 The ALU computes the result for all 'pure' instructions, such as the arithmetic
 instructions.
