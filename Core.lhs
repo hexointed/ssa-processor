@@ -40,7 +40,7 @@ A single processor core
 < | '--------------------------------------------------------'  |
 < +-------------------------------------------------------------+
 
-> core = undefined
+> core = (cWrite, cOutput)
 > 	where
 > 		iMemOut       = instrMem iPtr
 > 		(instr, iPtr) = scheduler iMemOut
