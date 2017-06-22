@@ -62,15 +62,15 @@ support a later rewrite using proper blockRams.
 > crb :: Signal CRead -> Signal CWrite -> Signal COutput
 > crb = curry (mealy crb' startState . bundle)
 > 	where
-> 		startState = Crb 0x0 $ repeat $ CVal undefined undefined
+> 		startState = Crb 0x0 $ repeat $ CVal 5 0
 >
 > crb' :: Crb -> (CRead, CWrite) -> (Crb, COutput)
 > crb' c (r, w) = (c' , COutput resA resB resC (regCounter c'))
 > 	where
 > 		c' = invalidateBuf r $ writeBuf w $ nextRC r c
-> 		resA = buf c !! (regCounter c - cReadA r - 1)
-> 		resB = buf c !! (regCounter c - cReadB r - 1)
-> 		resC = buf c !! (regCounter c - cReadC r - 1)
+> 		resA = buf c !! (regCounter c - cReadA r)
+> 		resB = buf c !! (regCounter c - cReadB r)
+> 		resC = buf c !! (regCounter c - cReadC r)
 >
 > writeBuf :: CWrite -> Crb -> Crb
 > writeBuf i c = c { buf = replace (cWriteA i) (cWriteV i) (buf c) }
